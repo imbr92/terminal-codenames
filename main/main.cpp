@@ -22,6 +22,8 @@
 #include <ncpp/Subproc.hh>
 #include <ncpp/Progbar.hh>
 
+#include "Board.hpp"
+
 void mask_signals(){
     sigset_t mask;
     sigemptyset(&mask);
@@ -38,34 +40,14 @@ void mask_signals(){
 
 constexpr int64_t DELAY = 1;
 
-// dump two wide glyphs, then create a new plane and drop it atop them
+void center_text(ncpp::Plane &plane, const std::string &text) {
+    size_t height = plane.get_dim_y();
+    size_t width = plane.get_dim_x();
 
-auto stomper(ncpp::NotCurses& nc, std::shared_ptr<ncpp::Plane>& nn) -> int {
-  // should knock out both wide glyphs
-  nn->move(0, 1);
-  nc.render();
-  sleep(DELAY);
+    size_t x = (width - text.length()) / 2;
+    size_t y = height / 2;
 
-  nn->move(0, 2);
-  nc.render();
-  sleep(DELAY);
-
-  nn->move(0, 3);
-  nc.render();
-  sleep(DELAY);
-
-  nn->move(1, 3);
-  nc.render();
-  sleep(DELAY);
-
-  nn->move(1, 2);
-  nc.render();
-  sleep(DELAY);
-
-  nn->move(1, 1);
-  nc.render();
-  sleep(DELAY);
-  return 0;
+    plane.putstr(y, x, text.c_str());
 }
 
 int run(){
@@ -87,11 +69,6 @@ int run(){
     /*ncpp::PlotD plot3 (p3);*/
     /*while(true) {nc.render();};*/
     /*nc.stop();*/
-    const size_t MAX_WORD_SIZE = 15;
-    const size_t BOARD_ROWS_TILE = 5;
-    const size_t BOARD_COLS_TILE = 5;
-    const size_t TILE_ROWS = 5;
-    const size_t TILE_COLS = MAX_WORD_SIZE + 4;
 
     notcurses_options nopts{};
     nopts.flags = NCOPTION_DRAIN_INPUT;
@@ -102,36 +79,67 @@ int run(){
     stdplane->set_fg_rgb8(0x80, 0xc0, 0x80);
     stdplane->set_bg_rgb8(0x00, 0x40, 0x00);
     stdplane->putstr("Among us");
+    Game::Board<5, 5> board(0);
 
 
-    tiles.reserve(BOARD_COLS_TILE);
-    size_t cx = 2, ry = 1;
-    for(size_t i = 0; i < BOARD_ROWS_TILE; ++i){
-        tiles.emplace_back();
-        tiles.back().reserve(BOARD_ROWS_TILE);
-        for(size_t i = 0; i < BOARD_COLS_TILE; ++i){
-            tiles.back().emplace_back(TILE_ROWS, TILE_COLS, ry, cx);
-            ncpp::Plane& cur_tile = tiles.back().back();
-            cur_tile.set_fg_rgb8(0xc0, 0x80, 0xc0);
-            cur_tile.set_bg_rgb8(0x20, 0x00, 0x20);
-            cur_tile.set_base("", 0, NCCHANNELS_INITIALIZER(0xc0, 0x80, 0xc0, 0x20, 0, 0x20));
-            cx += TILE_COLS + 2;
-            nc.render();
-        }
-        cx = 2;
-        ry += TILE_ROWS + 1;
-
-    }
+    /*tiles.reserve(BOARD_COLS_TILE);*/
+    /*size_t cx = 2, ry = 1;*/
+    /*for(size_t i = 0; i < BOARD_ROWS_TILE; ++i){*/
+    /*    tiles.emplace_back();*/
+    /*    tiles.back().reserve(BOARD_ROWS_TILE);*/
+    /*    for(size_t i = 0; i < BOARD_COLS_TILE; ++i){*/
+    /*        tiles.back().emplace_back(TILE_ROWS, TILE_COLS, ry, cx);*/
+    /*        ncpp::Plane& cur_tile = tiles.back().back();*/
+    /*        cur_tile.set_fg_rgb8(0xc0, 0x80, 0xc0);*/
+    /*        cur_tile.set_bg_rgb8(0x20, 0x00, 0x20);*/
+    /*        center_text(cur_tile, "AB");*/
+    /*        cur_tile.set_base("", 0, NCCHANNELS_INITIALIZER(0xc0, 0x80, 0xc0, 0x20, 0, 0x20));*/
+    /*        cx += TILE_COLS + 2;*/
+    /*        nc.render();*/
+    /*    }*/
+    /*    cx = 2;*/
+    /*    ry += TILE_ROWS + 1;*/
+    /**/
+    /*}*/
     nc.render();
-    sleep(20);
 
+    ncinput ni;
+    size_t cur_x = 0, cur_y = 0;
+    std::cerr << " got here\n";
+    while(nc.get(true, &ni) != (char32_t)-1){
+        if(ni.evtype == ncpp::EvType::Release){
+            continue;
+        }
+        if(ni.ctrl && ni.id == 'L'){
+            notcurses_refresh(nc, NULL, NULL);
+        }
+        else if((ni.ctrl && ni.id == 'D') || ni.id == NCKEY_ENTER){
+            break;
+        }
+        else if((ni.id == 'j') || (ni.id == NCKEY_DOWN)){
+            std::cerr << "pressed j or down\n";
+            exit(1);
+        }
+        /*else if(ncreader_offer_input(nr, &ni)){*/
+        /*    unsigned ncpy, ncpx;*/
+        /*    ncplane_cursor_yx(ncp, &ncpy, &ncpx);*/
+        /*    ncplane_dim_yx(tplane, &tgeomy, &tgeomx);*/
+        /*    ncplane_dim_yx(ncp, &vgeomy, &vgeomx);*/
+        /*    (*n)->printf(0, 0, "Scroll: %c Cursor: %03u/%03u Viewgeom: %03u/%03u Textgeom: %03u/%03u",*/
+        /*                 horscroll ? '+' : '-', ncpy, ncpx, vgeomy, vgeomx, tgeomy, tgeomx);*/
+        /*    nc.render();*/
+        /*}*/
+    }
+    std::cerr << "how did we get ehre";
+
+    sleep(20);
 
     // first, a 2x1 with "AB"
     //          explicit Plane (Plane *n, int rows, int cols, int yoff, int xoff, void *opaque = nullptr)
     //          explicit Plane (unsigned rows, unsigned cols, int yoff, int xoff, void *opaque = nullptr, NotCurses *ncinst = nullptr)
 
 
-    auto nn = std::make_shared<ncpp::Plane>(5, MAX_WORD_SIZE + 2, 10, 10);
+    auto nn = std::make_shared<ncpp::Plane>(5, Game::MAX_WORD_SIZE + 2, 10, 10);
     nn->set_fg_rgb8(0xc0, 0x80, 0xc0);
     nn->set_bg_rgb8(0x20, 0x00, 0x20);
     nn->set_base("", 0, NCCHANNELS_INITIALIZER(0xc0, 0x80, 0xc0, 0x20, 0, 0x20));
