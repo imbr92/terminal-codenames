@@ -39,16 +39,6 @@ void mask_signals(){
 
 constexpr int64_t DELAY = 1;
 
-void center_text(ncpp::Plane &plane, const std::string &text) {
-    size_t height = plane.get_dim_y();
-    size_t width = plane.get_dim_x();
-
-    size_t x = (width - text.length()) / 2;
-    size_t y = height / 2;
-
-    plane.putstr(y, x, text.c_str());
-}
-
 int run(){
     notcurses_options nopts{};
     // nopts.flags = NCOPTION_DRAIN_INPUT;

@@ -13,7 +13,7 @@ namespace Game {
     class Tile {
 
     private:
-        bool revealed; // TODO: maybe unnecessary because of TileType?
+        bool revealed;
         Game::TileType type;
         size_t x, y;
         std::string word;
@@ -22,11 +22,16 @@ namespace Game {
     public:
         Tile() = default;
 
+        // For dummy tiles
+        Tile(size_t x_pos, size_t y_pos, const std::string& word_, TileType type_, bool revealed_);
+
         Tile(size_t x_pos, size_t y_pos, size_t height, size_t width, const std::string& word_);
 
         void select();
         void unselect();
         void set_type(Game::TileType type_);
+        std::string get_word();
+        bool is_revealed();
 
     };
 

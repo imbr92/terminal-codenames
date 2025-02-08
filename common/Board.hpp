@@ -50,6 +50,19 @@ namespace Game {
             grid[x_pos][y_pos].select();
         }
 
+        Grid get_grid(){
+            return grid;
+        }
+
+        bool is_revealed(size_t x_pos, size_t y_pos){
+            return grid[x_pos][y_pos].is_revealed();
+        }
+
+        std::string get_word(size_t x_pos, size_t y_pos){
+            return grid[x_pos][y_pos].get_word();
+        }
+
+        // TODO: Remove eventually
         void color_test(){
             grid[0][0].set_type(Game::TileType::RED);
             grid[0][1].set_type(Game::TileType::BLUE);

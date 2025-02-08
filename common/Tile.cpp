@@ -2,14 +2,24 @@
 #include "GameUtils.hpp"
 
 namespace Game {
-Tile::Tile(size_t x_pos, size_t y_pos, size_t height, size_t width, const std::string& word_){
-            word = word_;
-            x = x_pos;
-            y = y_pos;
-            revealed = false;
-            type = TileType::UNKNOWN;
-            plane = std::make_unique<ncpp::Plane>(height, width, x_pos, y_pos);
-            Tile::unselect();
+
+    Tile::Tile(size_t x_pos, size_t y_pos, size_t height, size_t width, const std::string& word_){
+        word = word_;
+        x = x_pos;
+        y = y_pos;
+        revealed = false;
+        type = TileType::UNKNOWN;
+        plane = std::make_unique<ncpp::Plane>(height, width, x_pos, y_pos);
+        Tile::unselect();
+    }
+
+    Tile::Tile(size_t x_pos, size_t y_pos, const std::string& word_, TileType type_, bool revealed_){
+        word = word_;
+        x = x_pos;
+        y = y_pos;
+        revealed = revealed_;
+        type = type_;
+        plane = nullptr;
     }
 
     void Tile::unselect(){
@@ -47,6 +57,14 @@ Tile::Tile(size_t x_pos, size_t y_pos, size_t height, size_t width, const std::s
     void Tile::set_type(Game::TileType type_){
         type = type_;
         revealed = true;
+    }
+
+    bool Tile::is_revealed(){
+        return revealed;
+    }
+
+    std::string Tile::get_word(){
+        return word;
     }
 
 }
