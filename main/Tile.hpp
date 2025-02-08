@@ -20,6 +20,9 @@ namespace Game {
 
         Tile(size_t x_pos, size_t y_pos, size_t height, size_t width, const std::string& word_);
 
+        void select();
+        void unselect();
+
     };
 
 }

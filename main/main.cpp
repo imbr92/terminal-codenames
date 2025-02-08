@@ -5,7 +5,6 @@
 #include <langinfo.h>
 #include <pthread.h>
 #include <signal.h>
-#include <vector>
 #include <iostream>
 
 #include <ncpp/NotCurses.hh>
@@ -51,124 +50,59 @@ void center_text(ncpp::Plane &plane, const std::string &text) {
 }
 
 int run(){
-    /*ncpp::NotCurses nc;*/
-    /*ncpp::Plane* stdplane = nc.get_stdplane();*/
-    /*auto x_dim = stdplane->get_dim_x();*/
-    /*auto y_dim = stdplane->get_dim_y();*/
-    /*auto x_pos = stdplane->get_x();*/
-    /*auto y_pos = stdplane->get_y();*/
-    /*std::cerr << "X Dim: " << x_dim << '\n';*/
-    /*std::cerr << "Y Dim: " << y_dim << '\n';*/
-    /*std::cerr << "X Pos: " << x_pos << '\n';*/
-    /*std::cerr << "Y Pos: " << y_pos << '\n';*/
-    /*ncpp::Plane p1 (1, 1, 0, 0);*/
-    /*ncpp::Plot plot1 (p1);*/
-    /*ncpp::Plane p2 (1, 1, 0, 0);*/
-    /*ncpp::PlotU plot2 (p2);*/
-    /*ncpp::Plane p3 (1, 1, 0, 0);*/
-    /*ncpp::PlotD plot3 (p3);*/
-    /*while(true) {nc.render();};*/
-    /*nc.stop();*/
-
     notcurses_options nopts{};
-    nopts.flags = NCOPTION_DRAIN_INPUT;
+    // nopts.flags = NCOPTION_DRAIN_INPUT;
     ncpp::NotCurses nc(nopts);
     std::shared_ptr<ncpp::Plane> stdplane(nc.get_stdplane());
-    std::vector<std::vector<ncpp::Plane>> tiles;
 
     stdplane->set_fg_rgb8(0x80, 0xc0, 0x80);
     stdplane->set_bg_rgb8(0x00, 0x40, 0x00);
     stdplane->putstr("Among us");
     Game::Board<5, 5> board(0);
 
-
-    /*tiles.reserve(BOARD_COLS_TILE);*/
-    /*size_t cx = 2, ry = 1;*/
-    /*for(size_t i = 0; i < BOARD_ROWS_TILE; ++i){*/
-    /*    tiles.emplace_back();*/
-    /*    tiles.back().reserve(BOARD_ROWS_TILE);*/
-    /*    for(size_t i = 0; i < BOARD_COLS_TILE; ++i){*/
-    /*        tiles.back().emplace_back(TILE_ROWS, TILE_COLS, ry, cx);*/
-    /*        ncpp::Plane& cur_tile = tiles.back().back();*/
-    /*        cur_tile.set_fg_rgb8(0xc0, 0x80, 0xc0);*/
-    /*        cur_tile.set_bg_rgb8(0x20, 0x00, 0x20);*/
-    /*        center_text(cur_tile, "AB");*/
-    /*        cur_tile.set_base("", 0, NCCHANNELS_INITIALIZER(0xc0, 0x80, 0xc0, 0x20, 0, 0x20));*/
-    /*        cx += TILE_COLS + 2;*/
-    /*        nc.render();*/
-    /*    }*/
-    /*    cx = 2;*/
-    /*    ry += TILE_ROWS + 1;*/
-    /**/
-    /*}*/
     nc.render();
 
     ncinput ni;
     size_t cur_x = 0, cur_y = 0;
     std::cerr << " got here\n";
-    while(nc.get(true, &ni) != (char32_t)-1){
-        if(ni.evtype == ncpp::EvType::Release){
+
+    while (true) {
+        char32_t key = nc.get(true, &ni);  // Wait for input
+
+        if (key == (char32_t)-1) {  // No event (should not happen with blocking `true`)
             continue;
         }
-        if(ni.ctrl && ni.id == 'L'){
-            notcurses_refresh(nc, NULL, NULL);
+
+        std::cerr << key << '\n';
+
+        // Ignore key releases
+        if (ni.evtype == ncpp::EvType::Release) {
+            continue;
         }
-        else if((ni.ctrl && ni.id == 'D') || ni.id == NCKEY_ENTER){
-            break;
+
+        if (ni.ctrl) {  // Check if Ctrl is pressed
+            if (ni.id == 'Q') {  // Ctrl+Q -> Exit loop
+                break;
+            } else if (ni.id == 'L') {  // Ctrl+L -> Refresh screen
+                nc.render();
+            }
+            continue;
         }
-        else if((ni.id == 'j') || (ni.id == NCKEY_DOWN)){
-            std::cerr << "pressed j or down\n";
-            exit(1);
+
+        if (ni.id == 'h') {  // Check if Ctrl is pressed
+            board.update_position(0, -1);
+        } else if (ni.id == 'l') {  // Check if Ctrl is pressed
+            board.update_position(0, 1);
+        } else if (ni.id == 'j') {  // Check if Ctrl is pressed
+            board.update_position(1, 0);
+        } else if (ni.id == 'k') {  // Check if Ctrl is pressed
+            board.update_position(-1, 0);
         }
-        /*else if(ncreader_offer_input(nr, &ni)){*/
-        /*    unsigned ncpy, ncpx;*/
-        /*    ncplane_cursor_yx(ncp, &ncpy, &ncpx);*/
-        /*    ncplane_dim_yx(tplane, &tgeomy, &tgeomx);*/
-        /*    ncplane_dim_yx(ncp, &vgeomy, &vgeomx);*/
-        /*    (*n)->printf(0, 0, "Scroll: %c Cursor: %03u/%03u Viewgeom: %03u/%03u Textgeom: %03u/%03u",*/
-        /*                 horscroll ? '+' : '-', ncpy, ncpx, vgeomy, vgeomx, tgeomy, tgeomx);*/
-        /*    nc.render();*/
-        /*}*/
+
+        // Print pressed key
+        stdplane->printf(1, 0, "Key: %lc (%d)", key, key);
+        nc.render();
     }
-    std::cerr << "how did we get ehre";
-
-    sleep(20);
-
-    // first, a 2x1 with "AB"
-    //          explicit Plane (Plane *n, int rows, int cols, int yoff, int xoff, void *opaque = nullptr)
-    //          explicit Plane (unsigned rows, unsigned cols, int yoff, int xoff, void *opaque = nullptr, NotCurses *ncinst = nullptr)
-
-
-    auto nn = std::make_shared<ncpp::Plane>(5, Game::MAX_WORD_SIZE + 2, 10, 10);
-    nn->set_fg_rgb8(0xc0, 0x80, 0xc0);
-    nn->set_bg_rgb8(0x20, 0x00, 0x20);
-    nn->set_base("", 0, NCCHANNELS_INITIALIZER(0xc0, 0x80, 0xc0, 0x20, 0, 0x20));
-    /*nn->putstr("AB");*/
-    /**/
-    /*stdplane->set_fg_rgb8(0x80, 0xc0, 0x80);*/
-    /*stdplane->set_bg_rgb8(0x00, 0x40, 0x00);*/
-    /*stdplane->putstr("Among us");*/
-    /*// stdplane->putstr("\xe5\xbd\xa2\xe5\x85\xa8");*/
-    /*stdplane->putstr(1, 0, "\xe5\xbd\xa2\xe5\x85\xa8");*/
-    /*stdplane->putstr(2, 0, "\xe5\xbd\xa2\xe5\x85\xa8");*/
-    /*stdplane->putstr(3, 0, "\xe5\xbd\xa2\xe5\x85\xa8");*/
-    /*stdplane->putstr(4, 0, "abcdef");*/
-    /*stdplane->putstr(5, 0, "abcdef");*/
-    /*stdplane->putstr(6, 0, "abcdef");*/
-    /*stdplane->putstr(7, 0, "abcdef");*/
-    nc.render();
-    sleep(1);
-
-    /*stomper(nc, nn);*/
-    /*if(nn->putstr(0, 0, "\xe5\xbd\xa1") <= 0){*/
-    /*  return EXIT_FAILURE;*/
-    /*}*/
-    /*stomper(nc, nn);*/
-    /*nn->erase();*/
-    /*if(nn->putstr(0, 0, "r") <= 0){*/
-    /*  return EXIT_FAILURE;*/
-    /*}*/
-    /*stomper(nc, nn);*/
 
     return EXIT_SUCCESS;
 }
