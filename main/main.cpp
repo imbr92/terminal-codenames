@@ -58,49 +58,56 @@ int run(){
     stdplane->set_fg_rgb8(0x80, 0xc0, 0x80);
     stdplane->set_bg_rgb8(0x00, 0x40, 0x00);
     stdplane->putstr("Among us");
+
     Game::Board<5, 5> board(0);
 
+    // TODO: Remove
+    board.color_test();
     nc.render();
 
     ncinput ni;
-    size_t cur_x = 0, cur_y = 0;
-    std::cerr << " got here\n";
-
     while (true) {
         char32_t key = nc.get(true, &ni);  // Wait for input
 
-        if (key == (char32_t)-1) {  // No event (should not happen with blocking `true`)
+        if(key == (char32_t)-1){  // No event (should not happen with blocking `true`)
             continue;
         }
 
         std::cerr << key << '\n';
 
         // Ignore key releases
-        if (ni.evtype == ncpp::EvType::Release) {
+        if(ni.evtype == ncpp::EvType::Release){
             continue;
         }
 
-        if (ni.ctrl) {  // Check if Ctrl is pressed
-            if (ni.id == 'Q') {  // Ctrl+Q -> Exit loop
+        // TODO: figure out how to get this working
+        if(ni.ctrl){  // Check if Ctrl is pressed
+            std::cerr << "got ctrl'd\n";
+            if(ni.id == 'q'){  // Ctrl+Q -> Exit loop
                 break;
-            } else if (ni.id == 'L') {  // Ctrl+L -> Refresh screen
+            } else if(ni.id == 'l'){  // Ctrl+L -> Refresh screen
+                std::cerr << "refreshed\n";
                 nc.render();
             }
             continue;
         }
 
-        if (ni.id == 'h') {  // Check if Ctrl is pressed
+        // TODO: maybe move to switch or something
+        if(ni.id == 'h' || ni.id == NCKEY_LEFT){
             board.update_position(0, -1);
-        } else if (ni.id == 'l') {  // Check if Ctrl is pressed
+        } else if(ni.id == 'l' || ni.id == NCKEY_RIGHT){
             board.update_position(0, 1);
-        } else if (ni.id == 'j') {  // Check if Ctrl is pressed
+        } else if(ni.id == 'j' || ni.id == NCKEY_DOWN){
             board.update_position(1, 0);
-        } else if (ni.id == 'k') {  // Check if Ctrl is pressed
+        } else if(ni.id == 'k' || NCKEY_UP){
             board.update_position(-1, 0);
+        } else if(ni.id == NCKEY_ENTER){
+            board.select();
         }
 
         // Print pressed key
         stdplane->printf(1, 0, "Key: %lc (%d)", key, key);
+        stdplane->printf(10, 0, "Ctrl: %d Shift: %d", ni.ctrl, ni.shift);
         nc.render();
     }
 

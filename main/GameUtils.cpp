@@ -25,4 +25,12 @@ namespace Game {
         return std::vector<std::string>(num_words, "AMONG US");
     }
 
+    std::tuple<uint32_t, uint32_t, uint32_t> get_color_channels(uint32_t color){
+        return {
+            (color >> 16) & 0xFF,
+            (color >> 8) & 0xFF,
+            (color) & 0xFF,
+        };
+    }
+
 };

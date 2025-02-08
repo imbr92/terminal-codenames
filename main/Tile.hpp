@@ -8,9 +8,13 @@
 
 namespace Game {
 
+    enum class TileType { UNKNOWN, RED, BLUE, YELLOW, BLACK };
+
     class Tile {
 
     private:
+        bool revealed; // TODO: maybe unnecessary because of TileType?
+        Game::TileType type;
         size_t x, y;
         std::string word;
         std::unique_ptr<ncpp::Plane> plane;
@@ -22,6 +26,7 @@ namespace Game {
 
         void select();
         void unselect();
+        void set_type(Game::TileType type_);
 
     };
 
