@@ -29,9 +29,12 @@ namespace Game {
 
         void select();
         void unselect();
-        void set_type(Game::TileType type_);
         std::string get_word();
         bool is_revealed();
+        void draw();
+        void set_revealed(bool revealed_);
+        void set_type(Game::TileType type_);
+        void set_word(const std::string& word_);
 
     };
 

@@ -89,7 +89,7 @@ int run(){
             board.update_position(0, 1);
         } else if(ni.id == 'j' || ni.id == NCKEY_DOWN){
             board.update_position(1, 0);
-        } else if(ni.id == 'k' || NCKEY_UP){
+        } else if(ni.id == 'k' || ni.id == NCKEY_UP){
             board.update_position(-1, 0);
         } else if(ni.id == NCKEY_ENTER){
             board.select();

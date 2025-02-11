@@ -62,6 +62,31 @@ namespace Game {
             return grid[x_pos][y_pos].get_word();
         }
 
+        void set_revealed(size_t x_pos, size_t y_pos, bool revealed_){
+            grid[x_pos][y_pos].set_revealed(revealed_);
+        }
+
+        void set_type(size_t x_pos, size_t y_pos, TileType type_){
+            grid[x_pos][y_pos].set_type(type_);
+        }
+
+        void set_word(size_t x_pos, size_t y_pos, const std::string& word_){
+            grid[x_pos][y_pos].set_word(word_);
+        }
+
+        void draw(size_t x_pos, size_t y_pos){
+            grid[x_pos][y_pos].draw();
+        }
+
+        void draw(){
+            for(size_t i = 0; i < BOARD_NCOLS; ++i){
+                for(size_t j = 0; j < BOARD_NROWS; ++j){
+                    grid[i][j].draw();
+                }
+            }
+        }
+
+
         // TODO: Remove eventually
         void color_test(){
             grid[0][0].set_type(Game::TileType::RED);

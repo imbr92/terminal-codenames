@@ -60,6 +60,14 @@ namespace Game {
     constexpr uint64_t BLACK_SELECTED   = CHANNEL_INIT_64(BLACK, GREY_LIGHT);
 
 
+    enum Team {RED, BLUE};
+    enum Role {RECEIVER, SENDER};
+
+    struct Selection { size_t x_pos; size_t y_pos; Team team; };
+
+    struct Clue { std::string clue_word; size_t num_matches; };
+
+
     void center_text(ncpp::Plane& plane, const std::string &text);
 
     std::array<size_t, 2> get_raw_tile_coordinates(size_t tile_row, size_t tile_column);

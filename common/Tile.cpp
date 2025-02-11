@@ -35,7 +35,7 @@ namespace Game {
             plane->set_base("", 0, Game::BLACK_UNSELECTED);
         }
 
-        if(revealed) Game::center_text(*plane, word);
+        if(revealed) draw();
     }
 
     void Tile::select(){
@@ -51,13 +51,28 @@ namespace Game {
             plane->set_base("", 0, Game::BLACK_SELECTED);
         }
 
-        if(revealed) Game::center_text(*plane, word);
+        if(revealed) draw();
+    }
+
+    void Tile::draw(){
+        Game::center_text(*plane, word);
     }
 
     void Tile::set_type(Game::TileType type_){
         type = type_;
-        revealed = true;
+        if(type != Game::TileType::UNKNOWN){
+            revealed = true;
+        }
     }
+
+    void Tile::set_revealed(bool revealed_){
+        revealed = revealed_;
+    }
+
+    void Tile::set_word(const std::string& word_){
+        word = word_;
+    }
+
 
     bool Tile::is_revealed(){
         return revealed;
