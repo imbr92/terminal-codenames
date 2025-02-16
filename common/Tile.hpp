@@ -6,15 +6,15 @@
 #include <ncpp/NotCurses.hh>
 #include <ncpp/Plane.hh>
 
-namespace Game {
+#include "GameUtils.hpp"
 
-    enum class TileType { UNKNOWN, RED, BLUE, YELLOW, BLACK };
+namespace Game {
 
     class Tile {
 
     private:
         bool revealed;
-        Game::TileType type;
+        TileType type;
         size_t x, y;
         std::string word;
         std::unique_ptr<ncpp::Plane> plane;
@@ -29,7 +29,10 @@ namespace Game {
 
         void select();
         void unselect();
-        std::string get_word();
+        std::string get_word() const;
+        size_t get_x() const;
+        size_t get_y() const;
+        TileType get_type() const;
         bool is_revealed();
         void draw();
         void set_revealed(bool revealed_);

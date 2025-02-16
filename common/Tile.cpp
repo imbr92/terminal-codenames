@@ -78,8 +78,20 @@ namespace Game {
         return revealed;
     }
 
-    std::string Tile::get_word(){
+    std::string Tile::get_word() const{
         return word;
+    }
+
+    size_t Tile::get_x() const{
+        return x;
+    }
+
+    size_t Tile::get_y() const{
+        return y;
+    }
+
+    TileType Tile::get_type() const{
+        return type;
     }
 
 }

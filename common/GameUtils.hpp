@@ -17,6 +17,9 @@ namespace Game {
     constexpr size_t TILE_ROWS = 5;
     constexpr size_t MAX_WORD_SIZE = 15;
     constexpr size_t TILE_COLUMNS = MAX_WORD_SIZE + 4;
+    constexpr size_t FIXED_PACKET_LENGTH = 128;
+    constexpr size_t BUFFER_SIZE = FIXED_PACKET_LENGTH;
+    constexpr uint8_t CURRENT_VERSION = 0;
 
     // Color constants
     constexpr uint32_t BLACK = 0x000000;
@@ -60,12 +63,20 @@ namespace Game {
     constexpr uint64_t BLACK_SELECTED   = CHANNEL_INIT_64(BLACK, GREY_LIGHT);
 
 
-    enum Team {RED, BLUE};
-    enum Role {RECEIVER, SENDER};
+    enum Team : uint8_t { RED = 0, BLUE = 1 };
+    enum Role : uint8_t { RECEIVER = 0, SENDER = 1 };
+    enum class TileType : uint8_t { UNKNOWN = 0, RED = 1, BLUE = 2, YELLOW = 3, BLACK = 4 };
+    enum class MessageType : uint8_t { TILE_INFO = 0, CLUE = 1, GUESS = 2, PLAYER_INFO = 3, REQUEST_TILE = 4, END_OF_GAME = 5, START_OF_GAME = 6 };
+
 
     struct Selection { size_t x_pos; size_t y_pos; Team team; };
 
     struct Clue { std::string clue_word; size_t num_matches; };
+
+    // TODO: Maybe combine into a single struct?
+    struct Guess { std::size_t x_coord; size_t y_coord; };
+    struct TileRequest { std::size_t x_coord; size_t y_coord; };
+    struct PlayerInfo { Team team; Role role; };
 
 
     void center_text(ncpp::Plane& plane, const std::string &text);
