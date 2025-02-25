@@ -66,7 +66,7 @@ namespace Game {
     enum Team : uint8_t { RED = 0, BLUE = 1 };
     enum Role : uint8_t { RECEIVER = 0, SENDER = 1 };
     enum class TileType : uint8_t { UNKNOWN = 0, RED = 1, BLUE = 2, YELLOW = 3, BLACK = 4 };
-    enum class MessageType : uint8_t { TILE_INFO = 0, CLUE = 1, GUESS = 2, PLAYER_INFO = 3, REQUEST_TILE = 4, END_OF_GAME = 5, START_OF_GAME = 6 };
+    enum class MessageType : uint8_t { TILE_INFO = 0, CLUE = 1, GUESS = 2, PLAYER_INFO = 3, REQUEST_TILE = 4, END_OF_GAME = 5, START_OF_GAME = 6, GAME_STATE = 7 };
 
 
     struct Selection { size_t x_pos; size_t y_pos; Team team; };
@@ -77,6 +77,12 @@ namespace Game {
     struct Guess { std::size_t x_coord; size_t y_coord; };
     struct TileRequest { std::size_t x_coord; size_t y_coord; };
     struct PlayerInfo { Team team; Role role; };
+    struct GameState { Team team; Role role; };
+
+    bool operator==(const PlayerInfo& p, const GameState& g);
+    bool operator==(const GameState& g, const PlayerInfo& p);
+    bool operator!=(const PlayerInfo& p, const GameState& g);
+    bool operator!=(const GameState& g, const PlayerInfo& p);
 
 
     void center_text(ncpp::Plane& plane, const std::string &text);
@@ -87,4 +93,7 @@ namespace Game {
     std::vector<std::string> get_words(size_t seed, size_t num_words);
 
     std::tuple<uint32_t, uint32_t, uint32_t> get_color_channels(uint32_t color);
+
+    bool send_all(struct pollfd& poll_fd, const char (&buf)[Game::BUFFER_SIZE]);
+
 };

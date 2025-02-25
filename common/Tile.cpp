@@ -73,11 +73,6 @@ namespace Game {
         word = word_;
     }
 
-
-    bool Tile::is_revealed(){
-        return revealed;
-    }
-
     std::string Tile::get_word() const{
         return word;
     }
@@ -92,6 +87,10 @@ namespace Game {
 
     TileType Tile::get_type() const{
         return type;
+    }
+
+    bool Tile::get_revealed() const{
+        return revealed;
     }
 
 }

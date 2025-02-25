@@ -125,4 +125,18 @@ namespace Game {
         buf[5] = static_cast<char>(MessageType::TILE_INFO);
     }
 
+    void MessageSerializer::serialize(char (&buf)[BUFFER_SIZE], const GameState& game_state){
+        // Packet size starts at 6 to account for header
+        uint32_t packet_size = 6;
+        std::memset(buf, 0, BUFFER_SIZE);
+
+        MessageSerializer::append(buf, game_state.team, packet_size);
+        MessageSerializer::append(buf, game_state.role, packet_size);
+
+        buf[0] = CURRENT_VERSION;
+        uint32_t network_packet_size = htonl(packet_size);
+        std::memcpy(buf + 1, reinterpret_cast<char*>(&network_packet_size), sizeof(packet_size));
+        buf[5] = static_cast<char>(MessageType::PLAYER_INFO);
+    }
+
 }

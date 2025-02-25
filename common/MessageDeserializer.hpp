@@ -19,6 +19,6 @@ namespace Game {
         static TileRequest deserialize_tile_request(const Message& msg);
         static Team deserialize_end_of_game(const Message& msg);
         static bool deserialize_start_of_game(const Message& msg);
-
+        static GameState deserialize_game_state(const Message& msg);
     };
 }

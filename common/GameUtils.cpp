@@ -1,5 +1,8 @@
+#include <poll.h>
+
 #include <array>
 #include <string>
+#include <iostream>
 
 #include <ncpp/NotCurses.hh>
 #include <ncpp/Plane.hh>
@@ -31,6 +34,45 @@ namespace Game {
             (color >> 8) & 0xFF,
             (color) & 0xFF,
         };
+    }
+
+    bool operator==(const PlayerInfo& p, const GameState& g){
+        return p.team == g.team && p.role == g.role;
+    }
+
+    bool operator==(const GameState& g, const PlayerInfo& p){
+        return p == g;
+    }
+
+    bool operator!=(const PlayerInfo& p, const GameState& g){
+        return !(p == g);
+    }
+
+    bool operator!=(const GameState& g, const PlayerInfo& p){
+        return !(g == p);
+    }
+
+    bool send_all(struct pollfd& poll_fd, const char (&buf)[Game::BUFFER_SIZE]) {
+        size_t total_sent = 0;
+        while(total_sent < Game::BUFFER_SIZE){
+            poll_fd.events = POLLOUT;
+
+            int ret = poll(&poll_fd, 1,  -1); // Wait indefinitely
+            if(ret <= 0){
+                std::cerr << "[Error] Failed to poll\n";
+                return false;
+            }
+
+            if(poll_fd.revents & POLLOUT){
+                ssize_t sent = send(poll_fd.fd, buf + total_sent, Game::BUFFER_SIZE - total_sent, 0);
+                if(sent == -1){
+                    std::cerr << "[Error] Failed to send\n";
+                    return false;
+                }
+                total_sent += sent;
+            }
+        }
+        return true;
     }
 
 };

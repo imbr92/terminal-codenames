@@ -10,12 +10,21 @@
 
 namespace Game {
 
+    // Allow board to handle game state + clue drawing
     template<size_t BOARD_NROWS, size_t BOARD_NCOLS>
     class Board{
         using Grid = std::array<std::array<Tile, BOARD_NCOLS>, BOARD_NROWS>;
     private:
         int32_t x_pos, y_pos;
+
+        // Current game board
         Grid grid;
+
+        // Current state of game
+        GameState game_state;
+
+        // Most recent clue
+        Clue clue;
 
     public:
 
@@ -46,12 +55,28 @@ namespace Game {
             grid[x_pos][y_pos].select();
         }
 
+        void set_position(int32_t x, int32_t y){
+            x_pos = x, y_pos = y;
+        }
+
         void select(){
             grid[x_pos][y_pos].select();
         }
 
         Grid get_grid(){
             return grid;
+        }
+
+        Tile get_tile(size_t x_coord, size_t y_coord){
+            return grid.get_tile[x_coord][y_coord];
+        }
+
+        // TODO: verify that this is what we want
+        void set_tile(const Tile& tile){
+            auto& cur_tile = grid[tile.get_x()][tile.get_y()];
+            cur_tile.set_type(tile.get_type());
+            cur_tile.set_revealed(tile.get_revealed());
+            cur_tile.set_word(tile.get_word());
         }
 
         bool is_revealed(size_t x_pos, size_t y_pos){
@@ -85,6 +110,15 @@ namespace Game {
                 }
             }
         }
+
+
+        // TODO: implement these eventually and incorporate them into draw()
+
+        void draw_clue(){}
+        void erase_clue(){}
+        void draw_game_state(){}
+        void set_winner(Team winner){} // Draw winner?
+        void update_game_state(const GameState &game_state){} // Draw winner?
 
 
         // TODO: Remove eventually

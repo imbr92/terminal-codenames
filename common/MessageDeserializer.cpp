@@ -60,4 +60,12 @@ namespace Game {
         return true;
     }
 
+    GameState MessageDeserializer::deserialize_game_state(const Message& msg){
+        const auto& data = msg.get_data();
+        Team team = static_cast<Team>(data[0]);
+        Role role = static_cast<Role>(data[1]);
+
+        return { .team=team, .role=role };
+    }
+
 }

@@ -24,6 +24,30 @@ cc_library(
 cc_library(
     name = "board",
     hdrs = ["Board.hpp"],
+    deps = [":game_utils"],
+    visibility = ["//visibility:public"],  # Allows other targets to depend on it
+)
+
+cc_library(
+    name = "message",
+    srcs = ["Message.cpp"],
+    hdrs = ["Message.hpp"],
+    deps = [":game_utils"],
+    visibility = ["//visibility:public"],  # Allows other targets to depend on it
+)
+
+cc_library(
+    name = "message_serializer",
+    srcs = ["MessageSerializer.cpp"],
+    hdrs = ["MessageSerializer.hpp"],
     deps = [":game_utils", ":tile"],
+    visibility = ["//visibility:public"],  # Allows other targets to depend on it
+)
+
+cc_library(
+    name = "message_deserializer",
+    srcs = ["MessageDeserializer.cpp"],
+    hdrs = ["MessageDeserializer.hpp"],
+    deps = [":game_utils", ":tile", ":message"],
     visibility = ["//visibility:public"],  # Allows other targets to depend on it
 )

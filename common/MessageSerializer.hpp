@@ -19,6 +19,7 @@ namespace Game {
         static void serialize(char (&buf)[BUFFER_SIZE], const TileRequest& tile_request);
         static void serialize(char (&buf)[BUFFER_SIZE], const Team& team);
         static void serialize(char (&buf)[BUFFER_SIZE], const bool& start_of_game);
+        static void serialize(char (&buf)[BUFFER_SIZE], const GameState& game_state);
 
     };
 }

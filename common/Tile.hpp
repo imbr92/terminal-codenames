@@ -33,7 +33,7 @@ namespace Game {
         size_t get_x() const;
         size_t get_y() const;
         TileType get_type() const;
-        bool is_revealed();
+        bool get_revealed() const;
         void draw();
         void set_revealed(bool revealed_);
         void set_type(Game::TileType type_);
