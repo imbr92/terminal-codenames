@@ -28,6 +28,18 @@ namespace Game {
 
     public:
 
+        Board(){
+            x_pos = 0, y_pos = 0;
+            const std::vector<std::string> words = get_words(0, BOARD_NROWS * BOARD_NCOLS);
+            for(size_t i = 0; i < BOARD_NCOLS; ++i){
+                for(size_t j = 0; j < BOARD_NROWS; ++j){
+                    const auto [x, y] = get_raw_tile_coordinates(i, j);
+                    grid[i][j] = Tile(x, y, TILE_ROWS, TILE_COLUMNS, words[i * BOARD_NROWS + j]);
+                }
+            }
+            grid[x_pos][y_pos].select();
+        }
+
         Board(size_t seed){
             x_pos = 0, y_pos = 0;
             const std::vector<std::string> words = get_words(seed, BOARD_NROWS * BOARD_NCOLS);
@@ -67,8 +79,8 @@ namespace Game {
             return grid;
         }
 
-        Tile get_tile(size_t x_coord, size_t y_coord){
-            return grid.get_tile[x_coord][y_coord];
+        const Tile& get_tile(size_t x_coord, size_t y_coord){
+            return grid[x_coord][y_coord];
         }
 
         // TODO: verify that this is what we want
