@@ -122,7 +122,7 @@ namespace Game {
         buf[0] = CURRENT_VERSION;
         uint32_t network_packet_size = htonl(packet_size);
         std::memcpy(buf + 1, reinterpret_cast<char*>(&network_packet_size), sizeof(packet_size));
-        buf[5] = static_cast<char>(MessageType::TILE_INFO);
+        buf[5] = static_cast<char>(MessageType::START_OF_GAME);
     }
 
     void MessageSerializer::serialize(char (&buf)[BUFFER_SIZE], const GameState& game_state){

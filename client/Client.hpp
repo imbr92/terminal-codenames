@@ -34,10 +34,15 @@ namespace Game {
         // Poll Fd for client to server connection
         struct pollfd poll_fd;
 
+        // Std plane
+        std::shared_ptr<ncpp::Plane> stdplane;
+
     public:
 
-        Client(const char* address, const in_port_t& port): board(0){
+        Client(const char* address, const in_port_t& port, std::shared_ptr<ncpp::Plane> plane): board(0){
             is_started = false;
+
+            stdplane = plane;
 
             int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
             if(sock_fd < 0){
@@ -92,7 +97,17 @@ namespace Game {
 
         }
 
+        void draw_player_info(){
+            int y = 0;
+            int x = 0;
+            std::string team_text = "hello1";
+            std::string role_text = "hello2";
+            stdplane->putstr(y, x, team_text.c_str());
+            stdplane->putstr(y + 5, x, role_text.c_str());
+        }
+
         void draw(){
+            if(is_started) draw_player_info();
             board.draw();
         }
 
@@ -167,6 +182,38 @@ namespace Game {
             else{
                 std::cerr << "[Error] Received unknown message type\n";
             }
+        }
+
+        void start_game(){
+            char buf[BUFFER_SIZE];
+            MessageSerializer::serialize(buf, true);
+            send(buf);
+
+        }
+
+        bool send(const char (&buf)[BUFFER_SIZE]){
+            size_t total_sent = 0;
+
+            while(total_sent < BUFFER_SIZE){
+                poll_fd.events = POLLOUT;  // Set to wait for write readiness
+
+                // TODO: Maybe don't make this blocking?
+                int ret = ::poll(&poll_fd, 1, -1);
+                if(ret <= 0){
+                    std::cerr << "[Error] Poll failed or timed out\n";
+                    return false;
+                }
+
+                if(poll_fd.revents & POLLOUT){
+                    ssize_t sent = ::send(poll_fd.fd, buf + total_sent, BUFFER_SIZE - total_sent, 0);
+                    if(sent == -1){
+                        std::cerr << "[Error] Failed to send data\n";
+                        return false;
+                    }
+                    total_sent += sent;
+                }
+            }
+            return true;
         }
 
         // TODO: Updates full game state in a way such that it is pushed to ncpp

@@ -32,7 +32,7 @@ int run(){
     ncpp::NotCurses nc(nopts);
     std::shared_ptr<ncpp::Plane> stdplane(nc.get_stdplane());
 
-    Game::Client<5, 5> client(SERVER_IP, PORT);
+    Game::Client<5, 5> client(SERVER_IP, PORT, stdplane);
 
     ncinput ni;
     nc.render();
@@ -82,10 +82,12 @@ int run(){
             client.update_position(0, 1);
         } else if(ni.id == 'j' || ni.id == NCKEY_DOWN){
             client.update_position(1, 0);
-        } else if(ni.id == 'k' || NCKEY_UP){
+        } else if(ni.id == 'k' || ni.id == NCKEY_UP){
             client.update_position(-1, 0);
         } else if(ni.id == NCKEY_ENTER){
             client.select();
+        } else if(ni.id == 's'){
+            client.start_game();
         }
 
         // Print pressed key
