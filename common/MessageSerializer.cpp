@@ -4,8 +4,14 @@
 namespace Game {
     template<typename T>
     void MessageSerializer::append(char* buf, const T& src, uint32_t& packet_size){
-        memcpy(buf + packet_size, reinterpret_cast<const char*>(src), sizeof(T));
+        memcpy(buf + packet_size, reinterpret_cast<const char*>(&src), sizeof(T));
         packet_size += sizeof(T);
+    }
+
+    template<typename T>
+    void MessageSerializer::append_str(char* buf, const T& src, uint32_t& packet_size){
+        memcpy(buf + packet_size, reinterpret_cast<const char*>(src), strlen(src));
+        packet_size += strlen(src);
     }
 
     void MessageSerializer::serialize(char (&buf)[BUFFER_SIZE], const Tile& tile){
@@ -25,7 +31,7 @@ namespace Game {
         std::string word = tile.get_word();
         uint8_t word_len = static_cast<uint8_t>(word.size());
         MessageSerializer::append(buf, word_len, packet_size);
-        MessageSerializer::append(buf, word.c_str(), packet_size);
+        MessageSerializer::append_str(buf, word.c_str(), packet_size);
 
         buf[0] = CURRENT_VERSION;
         uint32_t network_packet_size = htonl(packet_size);
@@ -41,10 +47,10 @@ namespace Game {
         const std::string& clue_word = clue.clue_word;
         uint8_t clue_len = static_cast<uint8_t>(clue_word.size());
         MessageSerializer::append(buf, clue_len, packet_size);
-        MessageSerializer::append(buf, clue_word.c_str(), packet_size);
+        MessageSerializer::append_str(buf, clue_word.c_str(), packet_size);
 
         uint8_t num_matches = static_cast<uint8_t>(clue.num_matches);
-        MessageSerializer::append(buf, clue.num_matches, packet_size);
+        MessageSerializer::append(buf, num_matches, packet_size);
 
         buf[0] = CURRENT_VERSION;
         uint32_t network_packet_size = htonl(packet_size);
@@ -136,7 +142,7 @@ namespace Game {
         buf[0] = CURRENT_VERSION;
         uint32_t network_packet_size = htonl(packet_size);
         std::memcpy(buf + 1, reinterpret_cast<char*>(&network_packet_size), sizeof(packet_size));
-        buf[5] = static_cast<char>(MessageType::PLAYER_INFO);
+        buf[5] = static_cast<char>(MessageType::GAME_STATE);
     }
 
 }

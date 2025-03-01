@@ -9,6 +9,8 @@ namespace Game {
     private:
         template<typename T>
         static void append(char* buf, const T& src, uint32_t& packet_size);
+        template<typename T>
+        static void append_str(char* buf, const T& src, uint32_t& packet_size);
 
     public:
         MessageSerializer() = delete;

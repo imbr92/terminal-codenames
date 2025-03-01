@@ -35,5 +35,6 @@ eclipse-*bin/
 # User-specific .bazelrc
 user.bazelrc
 MODULE*
+test/catch*
 
 **error.log

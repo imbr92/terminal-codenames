@@ -20,7 +20,7 @@ namespace Game{
         return type;
     }
 
-    const std::vector<uint8_t>& Message::get_data() const{
+    const std::vector<char>& Message::get_data() const{
         return data;
     }
 

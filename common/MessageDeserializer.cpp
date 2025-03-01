@@ -22,7 +22,7 @@ namespace Game {
         uint8_t clue_len = data[0];
         assert(clue_len < Game::MAX_WORD_SIZE);
         std::string clue_str(data.begin() + 1, data.begin() + 1 + clue_len);
-        uint8_t num_matches = data[1];
+        uint8_t num_matches = data[clue_len + 1];
 
         return { .clue_word=clue_str, .num_matches=num_matches };
     }
