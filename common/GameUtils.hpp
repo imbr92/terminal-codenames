@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include <ncpp/NotCurses.hh>
 #include <ncpp/Plane.hh>
@@ -83,6 +84,17 @@ namespace Game {
     bool operator==(const GameState& g, const PlayerInfo& p);
     bool operator!=(const PlayerInfo& p, const GameState& g);
     bool operator!=(const GameState& g, const PlayerInfo& p);
+
+    std::ostream& operator<<(std::ostream& out, const Role &role);
+    std::ostream& operator<<(std::ostream& out, const Team &team);
+    std::ostream& operator<<(std::ostream& out, const PlayerInfo &player_info);
+
+    template<typename T>
+    std::string to_string(const T& obj){
+        std::ostringstream oss;
+        oss << obj;
+        return oss.str();
+    }
 
 
     void center_text(ncpp::Plane& plane, const std::string &text);

@@ -39,7 +39,7 @@ namespace Game {
 
     public:
 
-        Client(const char* address, const in_port_t& port, std::shared_ptr<ncpp::Plane> plane): board(0){
+        Client(const char* address, const in_port_t& port, std::shared_ptr<ncpp::Plane> plane): board(false){
             is_started = false;
 
             stdplane = plane;
@@ -100,10 +100,8 @@ namespace Game {
         void draw_player_info(){
             int y = 0;
             int x = 0;
-            std::string team_text = "hello1";
-            std::string role_text = "hello2";
-            stdplane->putstr(y, x, team_text.c_str());
-            stdplane->putstr(y + 5, x, role_text.c_str());
+            stdplane->putstr(y, x, to_string(player_info.team).c_str());
+            stdplane->putstr(y + 5, x, to_string(player_info.role).c_str());
         }
 
         void draw(){
@@ -132,16 +130,22 @@ namespace Game {
                     exit(EXIT_FAILURE);
                 }
             }
+            std::cerr << "Packet\n";
+            for(int i = 0; i < FIXED_PACKET_LENGTH; ++i){
+                std::cerr << ((int) buffer[i]) << ' ';
+            }
+            std::cerr << '\n';
 
             Message raw_msg(buffer);
             MessageType msg_type = raw_msg.get_type();
+            std::cerr << "[Info] Received message's type: " << (int) msg_type << '\n';
             apply_message(msg_type, raw_msg);
 
         }
 
         void apply_message(MessageType msg_type, const Message& raw_msg){
 
-            if(msg_type != MessageType::START_OF_GAME && !is_started){
+            if(msg_type != MessageType::PLAYER_INFO && !is_started){
                 return;
             }
 
@@ -160,8 +164,11 @@ namespace Game {
                 std::cerr << "[Info] Received guess as a client. Ignoring...\n";
             }
             else if(msg_type == Game::MessageType::PLAYER_INFO){
+                std::cerr << "[Info] Received PLAYER_INFO\n";
                 player_info = MessageDeserializer::deserialize_player_info(raw_msg);
+                std::cerr << "[Info] PlayerInfo: {" << (int) player_info.team << ", " << (int) player_info.role << "}\n";
                 is_started = true;
+                draw();
             }
             else if(msg_type == Game::MessageType::REQUEST_TILE){
                 std::cerr << "[Info] Received request_tile as a client. Ignoring...\n";
@@ -187,34 +194,11 @@ namespace Game {
         void start_game(){
             char buf[BUFFER_SIZE];
             MessageSerializer::serialize(buf, true);
-            send(buf);
+            send_all(poll_fd, buf);
+            std::cerr << "send successfully\n";
 
         }
 
-        bool send(const char (&buf)[BUFFER_SIZE]){
-            size_t total_sent = 0;
-
-            while(total_sent < BUFFER_SIZE){
-                poll_fd.events = POLLOUT;  // Set to wait for write readiness
-
-                // TODO: Maybe don't make this blocking?
-                int ret = ::poll(&poll_fd, 1, -1);
-                if(ret <= 0){
-                    std::cerr << "[Error] Poll failed or timed out\n";
-                    return false;
-                }
-
-                if(poll_fd.revents & POLLOUT){
-                    ssize_t sent = ::send(poll_fd.fd, buf + total_sent, BUFFER_SIZE - total_sent, 0);
-                    if(sent == -1){
-                        std::cerr << "[Error] Failed to send data\n";
-                        return false;
-                    }
-                    total_sent += sent;
-                }
-            }
-            return true;
-        }
 
         // TODO: Updates full game state in a way such that it is pushed to ncpp
         void update_position(int32_t dx, int32_t dy){

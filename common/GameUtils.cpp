@@ -72,7 +72,39 @@ namespace Game {
                 total_sent += sent;
             }
         }
+        poll_fd.events = POLLIN;
         return true;
     }
+
+
+    #define STRINGIFY(p) case(p): return #p;
+
+    std::ostream& operator<<(std::ostream& out, const PlayerInfo &player_info){
+        return out << '{' << player_info.team << ", " << player_info.role << '}';
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Team &team){
+        return out << [team]{
+            switch(team){
+                STRINGIFY(Team::RED);
+                STRINGIFY(Team::BLUE);
+                default:
+                    return "unknown";
+            }
+        }();
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Role &role){
+        return out << [role]{
+            switch(role){
+                STRINGIFY(Role::SENDER);
+                STRINGIFY(Role::RECEIVER);
+                default:
+                    return "unknown";
+            }
+        }();
+    }
+
+    #undef STRINGIFY
 
 };

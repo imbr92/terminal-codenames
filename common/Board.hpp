@@ -28,25 +28,35 @@ namespace Game {
 
     public:
 
-        Board(){
+        Board(bool dummy = true){
             x_pos = 0, y_pos = 0;
             const std::vector<std::string> words = get_words(0, BOARD_NROWS * BOARD_NCOLS);
             for(size_t i = 0; i < BOARD_NCOLS; ++i){
                 for(size_t j = 0; j < BOARD_NROWS; ++j){
                     const auto [x, y] = get_raw_tile_coordinates(i, j);
-                    grid[i][j] = Tile(x, y, TILE_ROWS, TILE_COLUMNS, words[i * BOARD_NROWS + j]);
+                    if(dummy){
+                        grid[i][j] = Tile(x, y, words[i * BOARD_NROWS + j], TileType::UNKNOWN, false);
+                    }
+                    else{
+                        grid[i][j] = std::move(Tile(x, y, TILE_ROWS, TILE_COLUMNS, words[i * BOARD_NROWS + j]));
+                    }
                 }
             }
             grid[x_pos][y_pos].select();
         }
 
-        Board(size_t seed){
+        Board(size_t seed, bool dummy = true){
             x_pos = 0, y_pos = 0;
             const std::vector<std::string> words = get_words(seed, BOARD_NROWS * BOARD_NCOLS);
             for(size_t i = 0; i < BOARD_NCOLS; ++i){
                 for(size_t j = 0; j < BOARD_NROWS; ++j){
                     const auto [x, y] = get_raw_tile_coordinates(i, j);
-                    grid[i][j] = Tile(x, y, TILE_ROWS, TILE_COLUMNS, words[i * BOARD_NROWS + j]);
+                    if(dummy){
+                        grid[i][j] = Tile(x, y, words[i * BOARD_NROWS + j], TileType::UNKNOWN, false);
+                    }
+                    else{
+                        grid[i][j] = std::move(Tile(x, y, TILE_ROWS, TILE_COLUMNS, words[i * BOARD_NROWS + j]));
+                    }
                 }
             }
             grid[x_pos][y_pos].select();
@@ -75,7 +85,7 @@ namespace Game {
             grid[x_pos][y_pos].select();
         }
 
-        Grid get_grid(){
+        Grid& get_grid(){
             return grid;
         }
 
@@ -91,12 +101,16 @@ namespace Game {
             cur_tile.set_word(tile.get_word());
         }
 
-        bool is_revealed(size_t x_pos, size_t y_pos){
-            return grid[x_pos][y_pos].is_revealed();
+        bool get_revealed(size_t x_pos, size_t y_pos){
+            return grid[x_pos][y_pos].get_revealed();
         }
 
         std::string get_word(size_t x_pos, size_t y_pos){
             return grid[x_pos][y_pos].get_word();
+        }
+
+        TileType get_type(size_t x_pos, size_t y_pos){
+            return grid[x_pos][y_pos].get_type();
         }
 
         void set_revealed(size_t x_pos, size_t y_pos, bool revealed_){

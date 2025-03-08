@@ -9,7 +9,7 @@ cc_binary(
 cc_library(
     name = "client",
     hdrs = ["Client.hpp"],
-    deps = ["//common:board", "//common:message", "//common:message_serializer", "//common:message_deserializer"],
+    deps = ["//common:board", "//common:message", "//common:message_serializer", "//common:message_deserializer", "//common:game_utils"],
     visibility = ["//visibility:public"],  # Allows other targets to depend on it
 )
 

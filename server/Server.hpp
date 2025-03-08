@@ -36,7 +36,7 @@ namespace Game {
 
     public:
 
-        Server(size_t seed, uint16_t PORT){
+        Server(size_t seed, uint16_t PORT): game_board(true){
             int server_fd;
             struct sockaddr_in server_addr;
             socklen_t addr_len = sizeof(server_addr);
@@ -75,7 +75,7 @@ namespace Game {
             poll_fds.push_back(pollfd{server_fd, POLLIN, 0});
 
             is_started = false;
-            game_board = Board<5, 5>(seed);
+            game_board = Board<5, 5>(seed, true);
             game_state = {Game::Team::RED, Game::Role::SENDER};
         }
 
@@ -99,13 +99,11 @@ namespace Game {
             Grid hidden_grid;
             for(size_t i = 0; i < BOARD_NCOLS; ++i){
                 for(size_t j = 0; j < BOARD_NROWS; ++j){
-                    if(game_board.is_revealed(i, j)){
-                        if(game_board.is_revealed(i, j)){
-                            hidden_grid[i][j] = Tile(i, j, game_board.get_word(i, j), game_board.get_type(i, j), true);
-                        }
-                        else{
-                            hidden_grid[i][j] = Tile(i, j, "", TileType::UNKNOWN, false);
-                        }
+                    if(game_board.get_revealed(i, j)){
+                        hidden_grid[i][j] = Tile(i, j, game_board.get_word(i, j), game_board.get_type(i, j), true);
+                    }
+                    else{
+                        hidden_grid[i][j] = Tile(i, j, "", TileType::UNKNOWN, false);
                     }
                 }
             }
@@ -134,12 +132,6 @@ namespace Game {
         int poll(){
             return ::poll(poll_fds.data(), poll_fds.size(), -1);
         }
-
-        // TODO: Support the following:
-        // Send board
-        // Receive clue
-        // Send clue
-        // Handle connections
 
         void process_connection(){
             if(is_started){
@@ -177,6 +169,7 @@ namespace Game {
             Message raw_msg(buffer);
             MessageType msg_type = raw_msg.get_type();
             apply_message(client_idx, msg_type, raw_msg);
+            poll_fds[client_idx].revents = POLLIN;
         }
 
         void apply_message(size_t client_idx, MessageType msg_type, const Message& raw_msg){
@@ -201,6 +194,7 @@ namespace Game {
                 Game::PlayerInfo current_player = get_assignment()[client_idx];
                 if(current_player != game_state){
                     std::cerr << "[Info] Received guess from wrong player or during wrong game state, ignoring...\n";
+                    return;
                 }
                 //TODO: Continue from here in server
                 // apply_guess(client_idx, new_guess);
@@ -218,12 +212,22 @@ namespace Game {
             else if(msg_type == Game::MessageType::START_OF_GAME){
                 if(is_started){
                     std::cerr << "[Info] Received START_OF_GAME message from client even though game has already started. Ignoring...\n";
+                    return;
                 }
+
+                if(client_idx != 1){
+                    std::cerr << "[Info] Received START_OF_GAME message from client other than client 1. Ignoring...\n";
+                    return;
+                }
+                std::cerr << "[Info] Starting game.\n";
                 is_started = true;
                 // for now assume exactly 4 players
                 assert(poll_fds.size() == 5);
                 assign_players(4);
                 send_assignments();
+                for(size_t i = 1; i < poll_fds.size(); ++i){
+                    send_board(i);
+                }
             }
             else if(msg_type == Game::MessageType::GAME_STATE){
                 std::cerr << "[Info] Received GAME_STATE message from client. Ignoring...\n";
@@ -232,20 +236,37 @@ namespace Game {
                 std::cerr << "[Error] Received unknown message type\n";
             }
 
-            // do some processing
+        }
 
+        // Note that client_idx is idx in poll_fds
+        bool send_board(size_t client_idx){
+            bool wks = true;
+            const Grid& to_send = (players[client_idx - 1].role == Role::SENDER) ? get_full_grid() : get_partial_grid();
+            char buf[Game::BUFFER_SIZE];
+            for(size_t x = 0; x < BOARD_NCOLS; ++x){
+                for(size_t y = 0; y < BOARD_NROWS; ++y){
+                    MessageSerializer::serialize(buf, to_send[x][y]);
+                    std::cerr << "[Info] Sent tile (" << x << ", " << y << ") to client " << client_idx << '\n';
+                    wks = wks && send_all(poll_fds[client_idx], buf);
+                }
+            }
+            return wks;
         }
 
         bool send_assignments(){
+
+            std::cerr << "[Info] Sending assignments\n";
             bool worked = true;
             char buf[Game::BUFFER_SIZE];
             const std::vector<Game::PlayerInfo>& player_info = get_assignment();
 
             for(size_t i = 0; i < player_info.size(); ++i){
                 memset(buf, 0, sizeof(buf));
-                Game::MessageSerializer::serialize(buf, player_info[0]);
+                Game::MessageSerializer::serialize(buf, player_info[i]);
                 worked |= Game::send_all(poll_fds[i + 1], buf);
             }
+
+            std::cerr << "[Info] Finished sending assignments\n";
 
             return worked;
         }
@@ -283,7 +304,6 @@ namespace Game {
             for(size_t i = 1; i < poll_fds.size(); ++i){
                 if(poll_fds[i].revents & event){
                     return i;
-
                 }
             }
 

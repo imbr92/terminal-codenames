@@ -10,6 +10,7 @@ namespace Game {
         revealed = false;
         type = TileType::UNKNOWN;
         plane = std::make_unique<ncpp::Plane>(height, width, x_pos, y_pos);
+        dummy = false;
         Tile::unselect();
     }
 
@@ -19,43 +20,85 @@ namespace Game {
         y = y_pos;
         revealed = revealed_;
         type = type_;
-        plane = nullptr;
+        plane = {};
+        dummy = true;
     }
 
+    Tile::Tile(const Tile& other) noexcept{
+        *this = Tile(other);
+    }
+
+    Tile& Tile::operator=(const Tile& other) noexcept{
+        if(this != &other){
+            revealed = other.revealed;
+            type = other.type;
+            x = other.x;
+            y = other.y;
+            word = other.word;
+            dummy = false;
+        }
+        return *this;
+    }
+
+    Tile::Tile(Tile&& other) noexcept
+    : revealed(other.revealed),
+        type(other.type),
+        x(other.x),
+        y(other.y),
+        dummy(other.dummy),
+        word(std::move(other.word)),
+        plane(std::move(other.plane)){}
+
+    Tile& Tile::operator=(Tile&& other) noexcept{
+        if(this != &other){
+            revealed = other.revealed;
+            type = other.type;
+            x = other.x;
+            y = other.y;
+            dummy = other.dummy;
+            word = std::move(other.word);
+            plane = std::move(other.plane);
+        }
+        return *this;
+    }
+
+
     void Tile::unselect(){
+        if(dummy) return;
         if(type == TileType::UNKNOWN){
-            plane->set_base("", 0, Game::DEFAULT_UNSELECTED);
+            plane.value()->set_base("", 0, Game::DEFAULT_UNSELECTED);
         } else if(type == TileType::RED){
-            plane->set_base("", 0, Game::RED_UNSELECTED);
+            plane.value()->set_base("", 0, Game::RED_UNSELECTED);
         } else if(type == TileType::BLUE){
-            plane->set_base("", 0, Game::BLUE_UNSELECTED);
+            plane.value()->set_base("", 0, Game::BLUE_UNSELECTED);
         } else if(type == TileType::YELLOW){
-            plane->set_base("", 0, Game::YELLOW_UNSELECTED);
+            plane.value()->set_base("", 0, Game::YELLOW_UNSELECTED);
         } else if(type == TileType::BLACK){
-            plane->set_base("", 0, Game::BLACK_UNSELECTED);
+            plane.value()->set_base("", 0, Game::BLACK_UNSELECTED);
         }
 
         if(revealed) draw();
     }
 
     void Tile::select(){
+        if(dummy) return;
         if(type == TileType::UNKNOWN){
-            plane->set_base("", 0, Game::DEFAULT_SELECTED);
+            plane.value()->set_base("", 0, Game::DEFAULT_SELECTED);
         } else if(type == TileType::RED){
-            plane->set_base("", 0, Game::RED_SELECTED);
+            plane.value()->set_base("", 0, Game::RED_SELECTED);
         } else if(type == TileType::BLUE){
-            plane->set_base("", 0, Game::BLUE_SELECTED);
+            plane.value()->set_base("", 0, Game::BLUE_SELECTED);
         } else if(type == TileType::YELLOW){
-            plane->set_base("", 0, Game::YELLOW_SELECTED);
+            plane.value()->set_base("", 0, Game::YELLOW_SELECTED);
         } else if(type == TileType::BLACK){
-            plane->set_base("", 0, Game::BLACK_SELECTED);
+            plane.value()->set_base("", 0, Game::BLACK_SELECTED);
         }
 
         if(revealed) draw();
     }
 
     void Tile::draw(){
-        Game::center_text(*plane, word);
+        Game::center_text(*plane.value(), word);
     }
 
     void Tile::set_type(Game::TileType type_){

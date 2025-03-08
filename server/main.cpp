@@ -53,6 +53,7 @@ int run(){
             server.process_connection();
         }
         else if(idx > 0){
+            std::cerr << "[Info] Received message from client id " << idx << '\n';
             server.process_message(idx);
         }
 

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <optional>
 
 #include <ncpp/NotCurses.hh>
 #include <ncpp/Plane.hh>
@@ -13,19 +14,25 @@ namespace Game {
     class Tile {
 
     private:
-        bool revealed;
+        bool revealed, dummy;
         TileType type;
         size_t x, y;
         std::string word;
-        std::unique_ptr<ncpp::Plane> plane;
+        std::optional<std::unique_ptr<ncpp::Plane>> plane;
 
     public:
         Tile() = default;
 
-        // For dummy tiles
+        // For dummy tiles --> no plane, used on server side + to pass to client
         Tile(size_t x_pos, size_t y_pos, const std::string& word_, TileType type_, bool revealed_);
 
+        // For real tiles (with planes), used on client side
         Tile(size_t x_pos, size_t y_pos, size_t height, size_t width, const std::string& word_);
+
+        Tile(const Tile& other) noexcept;
+        Tile(Tile&& other) noexcept;
+        Tile& operator=(const Tile& other) noexcept;
+        Tile& operator=(Tile&& other) noexcept;
 
         void select();
         void unselect();

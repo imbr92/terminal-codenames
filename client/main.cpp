@@ -47,6 +47,7 @@ int run(){
         }
 
         if(client.poll_events(POLLIN)){
+            std::cerr << "[Info] Received message\n";
             client.process_message();
         }
 
@@ -87,8 +88,11 @@ int run(){
         } else if(ni.id == NCKEY_ENTER){
             client.select();
         } else if(ni.id == 's'){
+            std::cerr << "[Info] Sent game start\n";
             client.start_game();
         }
+
+        client.draw();
 
         // Print pressed key
         stdplane->printf(1, 0, "Key: %lc (%d)", key, key);
@@ -99,9 +103,12 @@ int run(){
     return EXIT_SUCCESS;
 }
 
-int main(){
-
-    int errLog = open("error.log", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+int main(int argc, char* argv[]){
+    std::string log_file = "error.log";
+    if(argc > 1){
+        log_file = argv[1];
+    }
+    int errLog = open(log_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     dup2(errLog, STDERR_FILENO);
     close(errLog);
 
