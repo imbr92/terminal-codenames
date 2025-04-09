@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -105,6 +106,8 @@ namespace Game {
 
     // TODO: define or split out into separate class
     std::vector<std::string> get_words(size_t seed, size_t num_words);
+
+    std::optional<Team> _to_team(TileType type);
 
     std::vector<TileType> get_colors(size_t seed, size_t num_cells);
 

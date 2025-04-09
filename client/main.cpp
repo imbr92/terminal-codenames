@@ -71,6 +71,7 @@ int run(){
         if(client.poll_events(POLLIN)){
             std::cerr << "[Info] Received message\n";
             client.process_message();
+            continue;
         }
 
         char32_t key = nc.get(true, &ni);  // Wait for input

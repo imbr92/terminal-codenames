@@ -174,6 +174,12 @@ namespace Game {
         void draw(){
             for(size_t i = 0; i < BOARD_NCOLS; ++i){
                 for(size_t j = 0; j < BOARD_NROWS; ++j){
+                    if(i != x_pos || j != y_pos){
+                        grid[i][j].unselect();
+                    }
+                    else{
+                        grid[i][j].select();
+                    }
                     grid[i][j].draw();
                 }
             }

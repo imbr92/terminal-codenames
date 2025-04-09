@@ -119,6 +119,12 @@ namespace Game {
         return true;
     }
 
+    std::optional<Team> _to_team(TileType type){
+        if(type == TileType::RED) return Team::RED;
+        if(type == TileType::BLUE) return Team::BLUE;
+        return {};
+    }
+
 
     #define STRINGIFY(p) case(p): return #p;
 

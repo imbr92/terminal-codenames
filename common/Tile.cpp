@@ -106,6 +106,7 @@ namespace Game {
             plane.value()->set_base("", 0, Game::BLACK_UNSELECTED);
         }
 
+        // TODO: Check if revealed refers to whether the color was revealed or the word
         if(revealed) draw();
     }
 

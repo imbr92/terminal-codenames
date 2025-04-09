@@ -34,6 +34,8 @@ namespace Game {
 
         std::vector<struct pollfd> poll_fds;
 
+        std::map<Team, size_t> words_remaining;
+
     public:
 
         Server(size_t seed, uint16_t PORT): game_board(true){
@@ -126,6 +128,16 @@ namespace Game {
             players.push_back(PlayerInfo{Team::RED, Role::RECEIVER});
             players.push_back(PlayerInfo{Team::BLUE, Role::SENDER});
             players.push_back(PlayerInfo{Team::BLUE, Role::RECEIVER});
+
+            words_remaining.clear();
+            for(size_t i = 0; i < BOARD_NCOLS; ++i){
+                for(size_t j = 0; j < BOARD_NROWS; ++j){
+                    auto team = _to_team(game_board.get_type(i, j));
+                    if(team.has_value()){
+                        ++words_remaining[team.value()];
+                    }
+                }
+            }
 
             std::mt19937 rng(static_cast<unsigned>(std::time(nullptr)));
             std::shuffle(players.begin(), players.end(), rng);
@@ -248,9 +260,32 @@ namespace Game {
                     return;
                 }
 
-                bool done = game_board.decrement_guesses();
+                TileType type = game_board.get_tile(g.x_coord, g.y_coord).get_type();
+                auto team = _to_team(type);
+                auto same_team = [team = game_state.team](const TileType &type) -> bool{
+                    return (
+                        ((team == Team::RED) && (type == TileType::RED)) || ((team == Team::BLUE) && (type == TileType::BLUE))
+                    );
+                };
+
+                bool done = game_board.decrement_guesses() || type == TileType::BLACK || !same_team(type);
+                if(team.has_value()){
+                    --words_remaining[team.value()];
+                    if(!words_remaining[team.value()]){
+                        for(size_t i = 1; i < poll_fds.size(); ++i){
+                            send_end_of_game(i, team.value());
+                        }
+                    }
+                }
+
+
                 apply_guess(client_idx, new_guess);
                 std::cerr << "Applied guess\n";
+                if(type == TileType::BLACK) {
+                    for(size_t i = 1; i < poll_fds.size(); ++i){
+                        send_end_of_game(i, (Team)(game_state.team ^ 1));
+                    }
+                }
                 if(done) step();
                 std::cerr << "Applied step\n";
             }
@@ -289,10 +324,19 @@ namespace Game {
                 std::cerr << "[Info] Received GAME_STATE message from client. Ignoring...\n";
             }
             else{
-                std::cerr << "[Error] Received unknown message type\n";
+                std::cerr << "[Error] Received unknown message type. Ignoring...\n";
             }
 
         }
+
+        bool send_end_of_game(size_t client_idx, const Team& winner){
+            bool wks = true;
+            char buf[Game::BUFFER_SIZE];
+            MessageSerializer::serialize(buf, winner);
+            return send_all(poll_fds[client_idx], buf);
+
+        }
+
 
         bool send_clue(size_t client_idx, Clue clue){
             bool wks = true;
