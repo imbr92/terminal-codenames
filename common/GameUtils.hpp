@@ -88,6 +88,8 @@ namespace Game {
     std::ostream& operator<<(std::ostream& out, const Role &role);
     std::ostream& operator<<(std::ostream& out, const Team &team);
     std::ostream& operator<<(std::ostream& out, const PlayerInfo &player_info);
+    std::ostream& operator<<(std::ostream& out, const GameState &game_state);
+    std::ostream& operator<<(std::ostream& out, const Guess &guess);
 
     template<typename T>
     std::string to_string(const T& obj){
@@ -103,6 +105,8 @@ namespace Game {
 
     // TODO: define or split out into separate class
     std::vector<std::string> get_words(size_t seed, size_t num_words);
+
+    std::vector<TileType> get_colors(size_t seed, size_t num_cells);
 
     std::tuple<uint32_t, uint32_t, uint32_t> get_color_channels(uint32_t color);
 

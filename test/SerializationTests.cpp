@@ -16,7 +16,7 @@
 TEST_CASE("TILE_INFO", "[serialization]"){
     char buf[Game::BUFFER_SIZE];
     memset(buf, 0, sizeof(buf));
-    Game::Tile tile(0, 1, "hello", Game::TileType::BLUE, false);
+    Game::Tile tile(3, 4, "hello", Game::TileType::BLUE, false);
     Game::MessageSerializer::serialize(buf, tile);
     Game::Message raw_msg = Game::Message(buf);
     REQUIRE(raw_msg.get_type() == Game::MessageType::TILE_INFO);

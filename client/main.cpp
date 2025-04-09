@@ -34,9 +34,31 @@ int run(){
 
     Game::Client<5, 5> client(SERVER_IP, PORT, stdplane);
 
-    ncinput ni;
     nc.render();
     client.draw();
+
+
+    unsigned dimy, dimx;
+    nc.get_term_dim(&dimy, &dimx);
+    ncreader_options opts{};
+    bool horscroll = false;
+    opts.flags = NCREADER_OPTION_CURSOR;
+    // can't use Plane until we have move constructor for Reader
+    struct ncplane_options npopts = {
+      .y = 32,
+      .x = 2,
+      .rows = 4,
+      .cols = 105,
+      .userptr = nullptr,
+      .name = "read",
+      .resizecb = nullptr,
+      .flags = 0,
+      .margin_b = 0, .margin_r = 0,
+    };
+    ncinput ni;
+    /*(*n)->printf(0, 0, "Scroll: %c Cursor: 000/000 Viewgeom: %03u/%03u Textgeom: %03u/%03u",*/
+                 /*horscroll ? '+' : '-', vgeomy, vgeomx, tgeomy, tgeomx);*/
+    nc.render();
 
     while(true){
         int ret = client.poll(0);
@@ -86,17 +108,60 @@ int run(){
         } else if(ni.id == 'k' || ni.id == NCKEY_UP){
             client.update_position(-1, 0);
         } else if(ni.id == NCKEY_ENTER){
-            client.select();
+            client.guess_tile();
         } else if(ni.id == 's'){
             std::cerr << "[Info] Sent game start\n";
             client.start_game();
         }
 
+        // if(ni.id == NCKEY_ENTER && client.allow_text_input()){ // Enter text box section
+        if(ni.id == 'i'){ // Enter text box section
+            struct ncplane* rp = ncplane_create(*stdplane, &npopts);
+            ncplane_set_base(rp, "░", 0, 0);
+            auto nr = ncreader_create(rp, &opts);
+            if(nr == nullptr){
+              return EXIT_FAILURE;
+            }
+            unsigned tgeomy, tgeomx, vgeomy, vgeomx;
+            struct ncplane* ncp = ncreader_plane(nr);
+            struct ncplane* tplane = ncplane_above(ncp);
+            ncplane_dim_yx(tplane, &tgeomy, &tgeomx);
+            ncplane_dim_yx(ncp, &vgeomy, &vgeomx);
+
+            while(nc.get(true, &ni) != (char32_t)-1){
+                if(ni.evtype == ncpp::EvType::Release){
+                    continue;
+                }
+                if(ni.ctrl && ni.id == 'L'){
+                    notcurses_refresh(nc, NULL, NULL);
+                }else if((ni.ctrl && ni.id == 'D') || ni.id == NCKEY_ENTER){
+                    break;
+                }else if(ncreader_offer_input(nr, &ni)){
+                    unsigned ncpy, ncpx;
+                    ncplane_cursor_yx(ncp, &ncpy, &ncpx);
+                    ncplane_dim_yx(tplane, &tgeomy, &tgeomx);
+                    ncplane_dim_yx(ncp, &vgeomy, &vgeomx);
+                    // (*n)->printf(0, 0, "Scroll: %c Cursor: %03u/%03u Viewgeom: %03u/%03u Textgeom: %03u/%03u",
+                    // horscroll ? '+' : '-', ncpy, ncpx, vgeomy, vgeomx, tgeomy, tgeomx);
+                    nc.render();
+                }
+            }
+            nc.render();
+            char* contents;
+            ncreader_destroy(nr, &contents);
+
+            // nc.stop();
+            if(contents){
+                stdplane->printf(32, 110, "input: %s\n", contents);
+                client.send_clue(contents);
+            }
+        }
+
         client.draw();
 
-        // Print pressed key
-        stdplane->printf(1, 0, "Key: %lc (%d)", key, key);
-        stdplane->printf(10, 0, "Ctrl: %d Shift: %d", ni.ctrl, ni.shift);
+        // Print pressed key (Probably can remove)
+        // stdplane->printf(1, 110, "Key: %lc (%d)", key, key);
+        // stdplane->printf(10, 110, "Ctrl: %d Shift: %d", ni.ctrl, ni.shift);
         nc.render();
     }
 

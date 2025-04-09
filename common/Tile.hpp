@@ -16,12 +16,12 @@ namespace Game {
     private:
         bool revealed, dummy;
         TileType type;
-        size_t x, y;
+        size_t x, y; // Tile position in grid
         std::string word;
         std::optional<std::unique_ptr<ncpp::Plane>> plane;
 
     public:
-        Tile() = default;
+        Tile();
 
         // For dummy tiles --> no plane, used on server side + to pass to client
         Tile(size_t x_pos, size_t y_pos, const std::string& word_, TileType type_, bool revealed_);
@@ -36,11 +36,12 @@ namespace Game {
 
         void select();
         void unselect();
-        std::string get_word() const;
+        const std::string& get_word() const;
         size_t get_x() const;
         size_t get_y() const;
         TileType get_type() const;
         bool get_revealed() const;
+        bool get_dummy() const;
         void draw();
         void set_revealed(bool revealed_);
         void set_type(Game::TileType type_);

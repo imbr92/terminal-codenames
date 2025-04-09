@@ -98,14 +98,36 @@ namespace Game {
         }
 
         void draw_player_info(){
-            int y = 0;
-            int x = 0;
-            stdplane->putstr(y, x, to_string(player_info.team).c_str());
-            stdplane->putstr(y + 5, x, to_string(player_info.role).c_str());
+            int y = 3;
+            int x = 110;
+            stdplane->putstr(y, x, "Player Info");
+            stdplane->putstr(y + 1, x, to_string(player_info.team).c_str());
+            stdplane->putstr(y + 2, x, to_string(player_info.role).c_str());
+        }
+
+        void draw_game_state(){
+            int y = 7;
+            int x = 110;
+            stdplane->putstr(y, x, "Game State");
+            const auto& cur_game_state = board.get_game_state();
+            stdplane->putstr(y + 1, x, to_string(cur_game_state.team).c_str());
+            stdplane->putstr(y + 2, x, to_string(cur_game_state.role).c_str());
+        }
+
+        void draw_clue(){
+            int y = 11;
+            int x = 110;
+            const auto& cur_clue = board.get_clue();
+            stdplane->putstr(y, x, ("Clue: " + cur_clue.clue_word).c_str());
+            stdplane->putstr(y + 1, x, (std::string("Num Matches: ") + std::to_string(cur_clue.num_matches)).c_str());
         }
 
         void draw(){
-            if(is_started) draw_player_info();
+            if(is_started){
+                draw_player_info();
+                draw_game_state();
+                draw_clue();
+            }
             board.draw();
         }
 
@@ -117,9 +139,23 @@ namespace Game {
             return poll_fd.revents & event;
         }
 
+        // Return true if it is a reasonable time for this client to provide text input.
+        bool allow_text_input(){
+            const auto& cur_game_state = board.get_game_state();
+            if(
+                (cur_game_state.team == player_info.team) &&
+                (cur_game_state.role == player_info.role) &&
+                (cur_game_state.role == Role::SENDER)
+            ){
+                return true;
+            }
+            else return false;
+        }
+
         void process_message(){
             char buffer[BUFFER_SIZE] = {0};
             ssize_t total_bytes_read = 0;
+            std::cerr << "Got in process_message\n";
             while(total_bytes_read < FIXED_PACKET_LENGTH){
                 ssize_t bytes_read = read(poll_fd.fd, buffer + total_bytes_read, sizeof(buffer) - total_bytes_read);
                 total_bytes_read += bytes_read;
@@ -130,6 +166,7 @@ namespace Game {
                     exit(EXIT_FAILURE);
                 }
             }
+            std::cerr << "Got past while loop in process_message\n";
             std::cerr << "Packet\n";
             for(int i = 0; i < FIXED_PACKET_LENGTH; ++i){
                 std::cerr << ((int) buffer[i]) << ' ';
@@ -150,14 +187,20 @@ namespace Game {
             }
 
             if(msg_type == MessageType::TILE_INFO){
-                std::cerr << "[Info] Received TILE_INFO message from client. Ignoring...\n";
+                std::cerr << "[Info] Received TILE_INFO message from server\n";
                 Tile updated_tile = MessageDeserializer::deserialize_tile_info(raw_msg);
+                std::cerr << "finished deserializing tile\n";
+                std::cerr << "Tile: " << updated_tile.get_x() << ' ' << updated_tile.get_y() << ' ' << ((int)updated_tile.get_type()) << ' ' << updated_tile.get_revealed() << '\n';
                 board.set_tile(updated_tile);
+                std::cerr << "finished setting tile\n";
                 board.draw();
+                std::cerr << "[Info] Finished processing TILE_INFO message\n";
             }
             else if(msg_type == Game::MessageType::CLUE){
                 // TODO: Add checks here to make sure it is from right team/right turn/etc.
                 Game::Clue new_clue = MessageDeserializer::deserialize_clue(raw_msg);
+                board.set_clue(new_clue);
+                draw_clue();
                 // TODO: Add call to draw clue (maybe done within board.draw())
             }
             else if(msg_type == Game::MessageType::GUESS){
@@ -185,6 +228,7 @@ namespace Game {
             else if(msg_type == Game::MessageType::GAME_STATE){
                 GameState game_state = MessageDeserializer::deserialize_game_state(raw_msg);
                 board.update_game_state(game_state);
+                draw_game_state();
             }
             else{
                 std::cerr << "[Error] Received unknown message type\n";
@@ -195,8 +239,23 @@ namespace Game {
             char buf[BUFFER_SIZE];
             MessageSerializer::serialize(buf, true);
             send_all(poll_fd, buf);
-            std::cerr << "send successfully\n";
+            std::cerr << "sent start_game successfully\n";
+        }
 
+        void send_clue(const std::string& clue_with_count){
+            size_t pos = clue_with_count.find_last_of(' ');
+            if(pos == std::string::npos){
+                std::cerr << "[Info] Clue in wrong format, ignoring...\n";
+                return;
+            }
+            std::string word = clue_with_count.substr(0, pos);
+            // TODO: Add error checking here
+            size_t num_matches = std::stoi(clue_with_count.substr(pos + 1));
+
+            char buf[BUFFER_SIZE];
+            MessageSerializer::serialize(buf, Clue{.clue_word=word, .num_matches=num_matches});
+            send_all(poll_fd, buf);
+            std::cerr << "sent clue successfully\n";
         }
 
 
@@ -205,8 +264,19 @@ namespace Game {
             board.update_position(dx, dy);
         }
 
-        void select(){
-            board.select();
+        void guess_tile(){
+            const auto& cur_game_state = board.get_game_state();
+            if(
+                (cur_game_state.team == player_info.team) &&
+                (cur_game_state.role == player_info.role) &&
+                (cur_game_state.role == Role::RECEIVER)
+            ){
+                char buf[BUFFER_SIZE];
+                auto guess = Guess{.x_coord=board.get_x(), .y_coord=board.get_y()};
+                MessageSerializer::serialize(buf, guess);
+                send_all(poll_fd, buf);
+                std::cerr << "[Info] Sent guess" << Game::to_string(guess) << '\n';
+            }
         }
 
     };

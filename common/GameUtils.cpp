@@ -1,6 +1,10 @@
 #include <poll.h>
+#include <assert.h>
 
+#include <algorithm>
 #include <array>
+#include <fstream>
+#include <random>
 #include <string>
 #include <iostream>
 
@@ -25,7 +29,46 @@ namespace Game {
     }
 
     std::vector<std::string> get_words(size_t seed, size_t num_words){
-        return std::vector<std::string>(num_words, "AMONG US");
+        std::string word;
+        std::vector<std::string> all_words;
+        std::ifstream file("../assets/words.txt");
+        std::mt19937 rng(static_cast<unsigned>(std::time(nullptr)));
+
+        if(file.is_open()){
+            while (file >> word){
+                all_words.push_back(word);
+            }
+            file.close();
+        }
+        else{
+            std::cerr << "[Error] Couldn't open words file" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        // TODO: Switch out for better sampling method
+        std::shuffle(all_words.begin(), all_words.end(), rng);
+
+        if(num_words > all_words.size()){
+            std::cerr << "[Error] Too few words in word bank\n";
+            exit(EXIT_FAILURE);
+        }
+
+        return std::vector<std::string>(all_words.begin(), all_words.begin() + num_words);
+    }
+
+    std::vector<TileType> get_colors(size_t seed, size_t num_cells){
+        assert(num_cells == 25); // TODO: Fix so that this is no longer needed
+
+        std::mt19937 rng(static_cast<unsigned>(std::time(nullptr)));
+        std::vector<TileType> colors(num_cells);
+        std::fill(colors.begin(), colors.begin() + 9, TileType::RED);
+        std::fill(colors.begin() + 9, colors.begin() + 17, TileType::BLUE);
+        std::fill(colors.begin() + 17, colors.begin() + 24, TileType::YELLOW);
+        std::fill(colors.begin() + 24, colors.end(), TileType::BLACK);
+        for(auto i : colors) std::cerr << (int) i << ' ';
+        std::cerr << '\n';
+        std::shuffle(colors.begin(), colors.end(), rng);
+        return colors;
     }
 
     std::tuple<uint32_t, uint32_t, uint32_t> get_color_channels(uint32_t color){
@@ -79,8 +122,16 @@ namespace Game {
 
     #define STRINGIFY(p) case(p): return #p;
 
+    std::ostream& operator<<(std::ostream& out, const Guess &guess){
+        return out << '{' << guess.x_coord << ", " << guess.y_coord << '}';
+    }
+
     std::ostream& operator<<(std::ostream& out, const PlayerInfo &player_info){
         return out << '{' << player_info.team << ", " << player_info.role << '}';
+    }
+
+    std::ostream& operator<<(std::ostream& out, const GameState &game_state){
+        return out << '{' << game_state.team << ", " << game_state.role << '}';
     }
 
     std::ostream& operator<<(std::ostream& out, const Team &team){
