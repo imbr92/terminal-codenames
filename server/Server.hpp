@@ -87,9 +87,7 @@ namespace Game {
 
         // Returns grid with hidden words
         const Grid& get_full_grid(){
-            std::cerr << "got to full grid\n";
             const Grid& x = game_board.get_grid();
-            std::cerr << "assigned full grid\n";
             return x;
     }
 
@@ -101,18 +99,13 @@ namespace Game {
 
         // Returns grid with only revealed cells filled out
         const Grid get_partial_grid(){
-            std::cerr << "we in partial\n";
             Grid hidden_grid;
-            std::cerr << "we in partial 2\n";
             for(size_t i = 0; i < BOARD_NCOLS; ++i){
                 for(size_t j = 0; j < BOARD_NROWS; ++j){
-                    std::cerr << "we in partial 3\n";
                     if(game_board.get_revealed(i, j)){
-                        std::cerr << "we in partial 3a\n";
                         hidden_grid[i][j] = Tile(i, j, game_board.get_word(i, j), game_board.get_type(i, j), true);
                     }
                     else{
-                        std::cerr << "we in partial 3b\n";
                         hidden_grid[i][j] = Tile(i, j, game_board.get_word(i, j), TileType::UNKNOWN, false);
                     }
                 }
@@ -206,7 +199,6 @@ namespace Game {
         void apply_message(size_t client_idx, MessageType msg_type, const Message& raw_msg){
             // Client Id = Index in poll_fds.
 
-            // TODO: get client team and role --> add checks to make sure they arent speaking for another team, etc.
             if(msg_type != Game::MessageType::START_OF_GAME && !is_started){
                 return;
             }
@@ -217,7 +209,6 @@ namespace Game {
             else if(msg_type == Game::MessageType::CLUE){
                 // Add checks here to make sure it is from right team/right turn/etc.
                 Game::Clue new_clue = Game::MessageDeserializer::deserialize_clue(raw_msg);
-                // TODO: Double check that this is correct
                 const auto& cur_player = players[client_idx - 1];
 
                 if(cur_player != game_state){
@@ -242,7 +233,6 @@ namespace Game {
             else if(msg_type == Game::MessageType::GUESS){
                 // Add checks here to make sure it is from right team/right turn/etc.
                 Game::Guess new_guess = Game::MessageDeserializer::deserialize_guess(raw_msg);
-                // TODO: Confirm that need to subtract 1
                 const auto& cur_player = players[client_idx - 1];
                 if(cur_player != game_state){
                     std::cerr << "[Info] Received guess from wrong player or during wrong game state, ignoring...\n";
@@ -409,11 +399,9 @@ namespace Game {
             return send_all(poll_fd, buf);
         }
 
-        //TODO: Finish
         // If we are here, this guess must be new
         bool apply_guess(size_t client_idx, Guess request){
             game_board.set_revealed(request.x_coord, request.y_coord, true);
-            // TODO: Add logic to see whether game is over, etc.
             return send_tile(request.x_coord, request.y_coord);
         }
 

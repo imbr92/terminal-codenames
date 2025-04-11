@@ -43,14 +43,6 @@ namespace Game {
                     }
                 }
             }
-            std::cerr << "In board constructor\n";
-            for(int i = 0; i < 5; ++i){
-                for(int j = 0; j < 5; ++j){
-                    std::cerr << (int) grid[i][j].get_type() << ' ';
-                }
-                std::cerr << ' ';
-            }
-            std::cerr << '\n';
             grid[x_pos][y_pos].select();
         }
 
@@ -105,12 +97,6 @@ namespace Game {
         }
 
         const Grid& get_grid(){
-            std::cerr << "got to Board::get_grid\n";
-            std::cerr << "types: ";
-            for(int x = 0; x < 5; ++x)
-                for(int y = 0; y < 5; ++y)
-                    std::cerr << (int) grid[x][y].get_type() << ' ';
-            std::cerr << '\n';
             return grid;
         }
 
@@ -120,15 +106,10 @@ namespace Game {
 
         // TODO: verify that this is what we want
         void set_tile(const Tile& tile){
-            std::cerr << "in set_tile\n";
             Tile& cur_tile = grid[tile.get_x()][tile.get_y()];
-            std::cerr << "got cur_tile\n";
             cur_tile.set_type(tile.get_type());
-            std::cerr << "set type\n";
             cur_tile.set_revealed(tile.get_revealed());
-            std::cerr << "set revealed\n";
             cur_tile.set_word(tile.get_word());
-            std::cerr << "set word and exiting set_tile\n";
         }
 
         bool get_revealed(size_t x_pos, size_t y_pos){
@@ -185,9 +166,6 @@ namespace Game {
             }
         }
 
-
-        void set_winner(Team winner){}
-
         void update_game_state(const GameState &new_game_state){
             game_state = new_game_state;
         }
@@ -195,15 +173,6 @@ namespace Game {
         // Return true iff guesses is now 0
         bool decrement_guesses(){
             return --clue.num_matches == 0;
-        }
-
-        // TODO: Remove eventually
-        void color_test(){
-            grid[0][0].set_type(Game::TileType::RED);
-            grid[0][1].set_type(Game::TileType::BLUE);
-            grid[0][2].set_type(Game::TileType::YELLOW);
-            grid[0][3].set_type(Game::TileType::BLACK);
-            grid[0][4].set_type(Game::TileType::UNKNOWN);
         }
 
     };

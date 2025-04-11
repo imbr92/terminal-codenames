@@ -73,13 +73,6 @@ namespace Game {
             poll_fd.events = POLLIN | POLLOUT;
         }
 
-        // TODO: Support the following:
-        // Update game state (with dummy board) -- DONE
-        // Receive board (with dummy tiles)
-        // Receive Clue (Both clue receiver and sender to receive opponent clues)
-        // Send Clue (Only sender)
-        // Send Selection (Only receiver)
-
         // Updates board in a way such that it is pushed to ncpp
         void update_board(const Grid& dummy_board){
             for(size_t i = 0; i < BOARD_NCOLS; ++i){
@@ -92,6 +85,7 @@ namespace Game {
             board.draw();
         }
 
+        // TODO: Maybe remove?
         // TODO: Updates full game state in a way such that it is pushed to ncpp
         void update_state(Selection s){
 
@@ -120,6 +114,13 @@ namespace Game {
             const auto& cur_clue = board.get_clue();
             stdplane->putstr(y, x, ("Clue: " + cur_clue.clue_word).c_str());
             stdplane->putstr(y + 1, x, (std::string("Num Matches: ") + std::to_string(cur_clue.num_matches)).c_str());
+        }
+
+        void draw_winner(const Team& winner){
+            int y = 14;
+            int x = 110;
+            const auto& cur_clue = board.get_clue();
+            stdplane->putstr(y, x, ("Winner: " + to_string(winner)).c_str());
         }
 
         void draw(){
@@ -155,7 +156,6 @@ namespace Game {
         void process_message(){
             char buffer[BUFFER_SIZE] = {0};
             ssize_t total_bytes_read = 0;
-            std::cerr << "Got in process_message\n";
             while(total_bytes_read < FIXED_PACKET_LENGTH){
                 ssize_t bytes_read = read(poll_fd.fd, buffer + total_bytes_read, sizeof(buffer) - total_bytes_read);
                 total_bytes_read += bytes_read;
@@ -166,8 +166,7 @@ namespace Game {
                     exit(EXIT_FAILURE);
                 }
             }
-            std::cerr << "Got past while loop in process_message\n";
-            std::cerr << "Packet\n";
+            std::cerr << "Processed Packet\n";
             for(int i = 0; i < FIXED_PACKET_LENGTH; ++i){
                 std::cerr << ((int) buffer[i]) << ' ';
             }
@@ -189,19 +188,17 @@ namespace Game {
             if(msg_type == MessageType::TILE_INFO){
                 std::cerr << "[Info] Received TILE_INFO message from server\n";
                 Tile updated_tile = MessageDeserializer::deserialize_tile_info(raw_msg);
-                std::cerr << "finished deserializing tile\n";
+                std::cerr << "[Info] Finished deserializing tile\n";
                 std::cerr << "Tile: " << updated_tile.get_x() << ' ' << updated_tile.get_y() << ' ' << ((int)updated_tile.get_type()) << ' ' << updated_tile.get_revealed() << '\n';
                 board.set_tile(updated_tile);
-                std::cerr << "finished setting tile\n";
+                std::cerr << "[Info] Finished setting tile\n";
                 board.draw();
                 std::cerr << "[Info] Finished processing TILE_INFO message\n";
             }
             else if(msg_type == Game::MessageType::CLUE){
-                // TODO: Add checks here to make sure it is from right team/right turn/etc.
                 Game::Clue new_clue = MessageDeserializer::deserialize_clue(raw_msg);
                 board.set_clue(new_clue);
                 draw_clue();
-                // TODO: Add call to draw clue (maybe done within board.draw())
             }
             else if(msg_type == Game::MessageType::GUESS){
                 std::cerr << "[Info] Received guess as a client. Ignoring...\n";
@@ -218,8 +215,7 @@ namespace Game {
             }
             else if(msg_type == Game::MessageType::END_OF_GAME){
                 Team winner = MessageDeserializer::deserialize_end_of_game(raw_msg);
-                // TODO: is this sufficient?
-                board.set_winner(winner);
+                draw_winner(winner);
             }
             else if(msg_type == Game::MessageType::START_OF_GAME){
                 // player_info message acts as a start of game for client
@@ -239,7 +235,7 @@ namespace Game {
             char buf[BUFFER_SIZE];
             MessageSerializer::serialize(buf, true);
             send_all(poll_fd, buf);
-            std::cerr << "sent start_game successfully\n";
+            std::cerr << "[Info] Sent start_game successfully\n";
         }
 
         void send_clue(const std::string& clue_with_count){
