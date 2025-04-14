@@ -18,8 +18,6 @@ Swap assets/words.txt to use a custom word list
 
 ## Known Issues (WIP)
 
-- Old clues aren't fully cleared by newer clues of smaller length
-- Old num matches aren't cleared by newer num matches of smaller length
-- Old team/role aren't cleared by newer team/role of smaller length
 - Need to add counter for num matches remaining (in addition to total for that turn which already exists)
+- Add counter for remaining number of tiles to find for each team
 - Refresh doesn't work

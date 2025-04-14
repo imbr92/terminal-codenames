@@ -29,6 +29,7 @@ namespace Game {
     public:
 
         Board(bool dummy = true){
+            clue.num_matches = 0;
             x_pos = 0, y_pos = 0;
             for(size_t i = 0; i < BOARD_NCOLS; ++i){
                 for(size_t j = 0; j < BOARD_NROWS; ++j){
@@ -47,6 +48,7 @@ namespace Game {
         }
 
         Board(size_t seed, bool dummy = true){
+            clue.num_matches = 0;
             x_pos = 0, y_pos = 0;
             const std::vector<std::string> words = get_words(seed, BOARD_NROWS * BOARD_NCOLS);
             for(size_t i = 0; i < BOARD_NCOLS; ++i){

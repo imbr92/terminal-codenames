@@ -25,6 +25,9 @@ namespace Game {
         // has game started?
         bool is_started;
 
+        // Number of remaining uncovered red/blue tiles
+        size_t num_red, num_blue;
+
         // PlayerInfo for this client
         PlayerInfo player_info;
 
@@ -41,6 +44,9 @@ namespace Game {
 
         Client(const char* address, const in_port_t& port, std::shared_ptr<ncpp::Plane> plane): board(false){
             is_started = false;
+
+            // TODO: Maybe don't hardcode
+            num_red = 9, num_blue = 8;
 
             stdplane = plane;
 
@@ -91,11 +97,19 @@ namespace Game {
 
         }
 
+        void clear_row(int y, int x_start){
+            stdplane->putstr(y, x_start, std::string(80, ' ').c_str());
+        }
+
         void draw_player_info(){
             int y = 3;
             int x = 110;
             stdplane->putstr(y, x, "Player Info");
+
+            clear_row(y + 1, x);
             stdplane->putstr(y + 1, x, to_string(player_info.team).c_str());
+
+            clear_row(y + 2, x);
             stdplane->putstr(y + 2, x, to_string(player_info.role).c_str());
         }
 
@@ -104,7 +118,11 @@ namespace Game {
             int x = 110;
             stdplane->putstr(y, x, "Game State");
             const auto& cur_game_state = board.get_game_state();
+
+            clear_row(y + 1, x);
             stdplane->putstr(y + 1, x, to_string(cur_game_state.team).c_str());
+
+            clear_row(y + 2, x);
             stdplane->putstr(y + 2, x, to_string(cur_game_state.role).c_str());
         }
 
@@ -112,7 +130,11 @@ namespace Game {
             int y = 11;
             int x = 110;
             const auto& cur_clue = board.get_clue();
+
+            clear_row(y, x);
             stdplane->putstr(y, x, ("Clue: " + cur_clue.clue_word).c_str());
+
+            clear_row(y + 1, x);
             stdplane->putstr(y + 1, x, (std::string("Num Matches: ") + std::to_string(cur_clue.num_matches)).c_str());
         }
 
